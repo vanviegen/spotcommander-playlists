@@ -28,3 +28,6 @@ elif wmctrl -l | grep "Spotify - Linux Preview"; then
 	wmctrl -a "Spotify - Linux Preview"
 
 fi
+
+sleep 0.5
+

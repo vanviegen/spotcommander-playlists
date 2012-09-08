@@ -59,10 +59,7 @@ function togglePower()
 			$('input:hidden#spotify_ps_input').val('0');
 		}
 
-		setTimeout(function()
-		{
-			refreshNowplaying();
-		}, 5000);
+		refreshNowplaying();
 	}
 }
 
@@ -576,32 +573,37 @@ function hideNowplaying()
 	}
 }
 
-function refreshNowplaying()
+var lastData;
+function refreshNowplaying(mode)
 {
 	autoRefreshNowplaying('reset');
 
-	hideNowplayingMoreMenu();
+	if (mode!='auto') {
+		hideNowplayingMoreMenu();
 
-	if(typeof nowplaying_xhr != 'undefined')
-	{
-		nowplaying_xhr.abort();
-	}
+		if(typeof nowplaying_xhr != 'undefined')
+		{
+			nowplaying_xhr.abort();
+		}
 
-	$('div#nowplaying_more_menu_click_div').css('pointer-events', 'none').css('opacity', '0.5');
+		$('div#nowplaying_more_menu_click_div').css('pointer-events', 'none').css('opacity', '0.5');
 
-	$('div#bottombar_nowplaying_div').html('<img src="img/loading-grey.gif?'+global_serial+'" alt="Image">');
+		$('div#bottombar_nowplaying_div').html('<img src="img/loading-grey.gif?'+global_serial+'" alt="Image">');
 
-	if(ua_supported_csstransitions && ua_supported_csstransforms3d)
-	{
-		$('div#nowplaying_albumart_div').addClass('albumart_slideout_animation');
-	}
-	else
-	{
-		$('div#nowplaying_albumart_div').animate({ left: '-'+window_width+'px' }, 500, 'easeOutExpo');
+		if(ua_supported_csstransitions && ua_supported_csstransforms3d)
+		{
+			$('div#nowplaying_albumart_div').addClass('albumart_slideout_animation');
+		}
+		else
+		{
+			$('div#nowplaying_albumart_div').animate({ left: '-'+window_width+'px' }, 500, 'easeOutExpo');
+		}
 	}
 
 	nowplaying_xhr = $.get('nowplaying.php', function(data)
 	{
+		if (lastData==data && mode=='auto') return;
+		lastData = data;
 		$('div#nowplaying_div').html(data);
 
 		if(ua_supported_inputtype_range)
@@ -647,7 +649,7 @@ function refreshNowplaying()
 
 function autoRefreshNowplaying(action)
 {
-	if(action == 'start' && config_nowplaying_update_interval >= 30)
+	if(action == 'start' && config_nowplaying_update_interval >= 1)
 	{
 		var time = new Date().getTime();
 		setCookie('nowplaying_last_update', time);
@@ -661,7 +663,7 @@ function autoRefreshNowplaying(action)
 			{
 				nowplaying_timeout = setTimeout(function()
 				{
-					refreshNowplaying();
+					refreshNowplaying('auto');
 				}, 5000);
 
 				var time = new Date().getTime();
@@ -1296,6 +1298,14 @@ $(window).load(function()
 		});
 
 		$(document).on(click_event, 'div#nowplaying_remote_click_div', function()
+		{
+			if(!moved)
+			{
+				toggleNowplaying();
+			}
+		});
+		
+		$(document).on(click_event, 'div#bottombar_nowplaying_div', function()
 		{
 			if(!moved)
 			{

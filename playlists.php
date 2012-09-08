@@ -275,68 +275,46 @@ else
 		<span id="page_title_content_span">Playlists</span>
 
 		<div id="more_menu_content_div">
-		<div class="show_page_click_div" onclick="void(0)">Add playlist<span class="hidden_value_span">0|:|playlists|:|add|:|</span></div>
 		<div class="show_page_click_div" onclick="void(0)">Top playlists<span class="hidden_value_span">1|:|playlists|:|top|:|</span></div>
 		</div>
 	';
 
-	$db = new SQLite3('db/playlists.db');
+	$row = remote('playlists-get');
 
-	$query = $db->query("SELECT * FROM playlists ORDER BY name COLLATE NOCASE");
-	$row = array();
+	echo '<div class="category_title_div">ALL</div>';
+
 	$i = 0;
 
-	while($playlist = $query->fetchArray(SQLITE3_ASSOC))
+	asort($row);
+	foreach($row as $uri => $name)
 	{
-		$i++; 
+		$i++;
 
-		$row[$i]['id'] = $playlist['id'];
-		$row[$i]['name'] = $playlist['name'];
-		$row[$i]['uri'] = urldecode($playlist['uri']);
-	}
+		$id = $i;
+		$user = explode(':', $uri);
+		$user = $user[2];
 
-	if(count($row) == 0)
-	{
-		echo '<div id="page_message_div">You have not added any playlists yet. <span class="show_page_click_span">Add playlists<span class="hidden_value_span">0|:|playlists|:|add|:|</span></span> or check out the <span class="show_page_click_span">top playlists<span class="hidden_value_span">1|:|playlists|:|top|:|</span></span> currently on the web.</div>';
-	}
-	else
-	{
-		echo '<div class="category_title_div">ALL</div>';
-
-		$i = 0;
-
-		foreach($row as $playlist)
+		if($name == 'Unknown')
 		{
-			$i++;
-
-			$id = $playlist['id'];
-			$name = $playlist['name'];
-			$uri = $playlist['uri'];
-			$user = explode(':', $uri);
-			$user = $user[2];
-
-			if($name == 'Unknown')
-			{
-				$name = 'Unknown (ID: ' . $id . ')';
-			}
-
-			echo '
-				<div class="media_div">
-				<div class="media_arrow_div" id="media_inner_div_' . $i . '_arrow"></div>
-				<div class="media_corner_arrow_div" id="media_inner_div_' . $i . '_corner_arrow"></div>
-				<div class="media_inner_div" id="media_inner_div_' . $i . '" title="' . hsc($name) . '" onclick="void(0)"><div class="media_left_div"><img src="img/playlist-24.png?' . global_serial . '" alt="Image"></div><div class="media_right_div"><div class="media_right_upper_div">' . hsc($name) . '</div><div class="media_right_lower_div">' . hsc($user) . '</div></div></div>
-				</div>
-				<div class="media_options_div" id="media_inner_div_' . $i . '_options">
-				<div class="media_options_inner_div">
-				<div class="media_play_uri_click_div" title="Play" onclick="void(0)"><img src="img/play-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
-				<div class="media_play_random_uri_click_div" title="Play random" onclick="void(0)"><img src="img/play-random-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
-				<div class="media_browse_playlist_click_div" title="Browse" onclick="void(0)"><img src="img/browse-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
-				<div class="media_share_click_div" title="Share" onclick="void(0)"><img src="img/share-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . urlencode(uri_to_url($uri)) . '</span></div>
-				<div class="media_remove_playlist_click_div" title="Remove" onclick="void(0)"><img src="img/remove-24.png?' . global_serial . '" alt="' . $id . '"><span class="hidden_value_span">' . $id . '</span></div>
-				</div>
-				</div>
-			';
+			$name = 'Unknown (ID: ' . $id . ')';
 		}
+
+		echo '
+			<div class="media_div">
+			<div class="media_arrow_div" id="media_inner_div_' . $i . '_arrow"></div>
+			<div class="media_corner_arrow_div" id="media_inner_div_' . $i . '_corner_arrow"></div>
+			<div class="media_inner_div" id="media_inner_div_' . $i . '" title="' . hsc($name) . '" onclick="void(0)"><div class="media_left_div"><img src="img/playlist-24.png?' . global_serial . '" alt="Image"></div><div class="media_right_div"><div class="media_right_upper_div">' . hsc($name) . '</div><div class="media_right_lower_div">' . hsc($user) . '</div></div></div>
+			</div>
+			<div class="media_options_div" id="media_inner_div_' . $i . '_options">
+			<div class="media_options_inner_div">
+			<div class="media_play_uri_click_div" title="Play" onclick="void(0)"><img src="img/play-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
+			<div class="media_play_random_uri_click_div" title="Play random" onclick="void(0)"><img src="img/play-random-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
+			<div class="media_browse_playlist_click_div" title="Browse" onclick="void(0)"><img src="img/browse-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . $uri . '</span></div>
+			<div class="media_share_click_div" title="Share" onclick="void(0)"><img src="img/share-24.png?' . global_serial . '" alt="Image"><span class="hidden_value_span">' . urlencode(uri_to_url($uri)) . '</span></div>
+			<div class="media_remove_playlist_click_div" title="Remove" onclick="void(0)"><img src="img/remove-24.png?' . global_serial . '" alt="' . $id . '"><span class="hidden_value_span">' . $id . '</span></div>
+			</div>
+			</div>
+		';
 	}
 }
 

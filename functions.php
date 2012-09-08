@@ -23,38 +23,30 @@ along with SpotCommander.  If not, see <http://www.gnu.org/licenses/>.
 
 // Remote control
 
-function remote($action)
+function remote()
 {
 	global $spotify_ps;
 
-	if($spotify_ps == 1 || $spotify_ps == 0 && $action == 'spotify-launch')
+	if($spotify_ps == 1 || $action == 'spotify-launch')
 	{
-		file_write('sh/spotcommander-remote.txt', $action);
+		$spath = "unix://".getcwd()."/sh/spotcommander.socket";
+		$conn = stream_socket_client($spath,$errno,$errstr);
+		if (!$conn) {
+			echo "<h2>Error connecting to spotcommander daemon</h2>$errstr<br />$spath<br />";
+			exit;
+		}
+		fwrite($conn, json_encode(func_get_args())."\n");
+		$res = '';
+		while(!feof($conn))
+			$res .= fread($conn,4096);
+		fclose($conn);
+		return json_decode($res,true);
 	}
 }
 
 function current_volume()
 {
-	$volume = trim(file_get_contents('sh/volume.txt'));
-
-	if(is_numeric($volume))
-	{
-		$volume = intval($volume);
-		$volume = $volume / 65537;
-		$volume = $volume * 100;
-		$volume = intval(round($volume));
-
-		if($volume < 0 || $volume > 100)
-		{
-			$volume = 50;
-		}
-	}
-	else
-	{
-		$volume = 50;
-	}
-
-	return($volume);
+	return remote('volume-get');
 }
 
 function volume_before_mute()
@@ -67,31 +59,12 @@ function volume_before_mute()
 
 function get_nowplaying()
 {
-	sleep(1);
+	$res = remote('metadata-get');
 
-	remote('metadata-get');
-
-	sleep(1);
-
-	$artist = trim(file_get_contents('sh/metadata-artist.txt'));
-	$title = trim(file_get_contents('sh/metadata-title.txt'));
-	$album = trim(file_get_contents('sh/metadata-album.txt'));
-	$albumart = trim(file_get_contents('sh/metadata-albumart.txt'));
-	$uri = trim(file_get_contents('sh/metadata-uri.txt'));
-	$length = trim(file_get_contents('sh/metadata-length.txt')) / 1000000;
-	$year = trim(file_get_contents('sh/metadata-year.txt'));
-	$playbackstatus = trim(file_get_contents('sh/playbackstatus.txt'));
-
-	$nowplaying['artist'] = $artist;
-	$nowplaying['title'] = $title;
-	$nowplaying['album'] = $album;
-	$nowplaying['albumart'] = $albumart;
-	$nowplaying['uri'] = $uri;
-	$nowplaying['length'] = floor($length / 60) . ':' . sprintf("%02s", $length % 60);
-	$nowplaying['year'] = substr($year, 0, 4);
-	$nowplaying['playbackstatus'] = $playbackstatus;
-
-	return($nowplaying);
+	$length = $res['length']/1000000;
+	$res['length'] = floor($length / 60) . ':' . sprintf("%02s", $length % 60);
+	$res['year'] = substr($res['year'], 0, 4);
+	return($res);
 }
 
 // Recently played

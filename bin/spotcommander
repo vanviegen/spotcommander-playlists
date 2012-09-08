@@ -44,6 +44,7 @@ SPOTCOMMANDER_PATH="$(grep "config_path" "$CONFIG_FILE")"
 SPOTCOMMANDER_PATH="$(echo "$SPOTCOMMANDER_PATH" | sed "s/ *//g" | sed "s/define('config_path','//" | sed "s/');//")"
 
 export SPOTCOMMANDER_PATH
+cd "$SPOTCOMMAND_PATH"
 
 if [ ! -e ""$SPOTCOMMANDER_PATH"/sh/spotify-ps.sh" ]; then
 
@@ -73,7 +74,7 @@ if [ "$1" = "start" ]; then
 
 	sleep 2
 
-	"$SPOTCOMMANDER_PATH"/sh/spotcommander-remote.sh 1>/dev/null 2>&1 &
+	"$SPOTCOMMANDER_PATH"/sh/spotcommander-remote &
 
 elif [ "$1" = "stop" ]; then
 

@@ -69,7 +69,7 @@ if(isset($_GET['check_for_errors']))
 	{
 		echo 2;
 	}
-	elseif(intval(exec(config_path . '/sh/spotcommander-ps.sh')) == 0)
+	elseif(!file_exists(config_path . '/sh/spotify-ps.sh'))
 	{
 		echo 3;
 	}
@@ -220,20 +220,14 @@ if(isset($remote))
 					$volume = 100;
 				}
 
-				$volume = $volume / 100;
-				$volume = $volume * 65537;
-
-				file_write('sh/volume.txt', round($volume));
-				remote('volume');
-
-				echo current_volume();
+				remote('volume', round($volume));
+				echo $volume;
 			}
 		}
 	}
 	elseif($remote == 'play-uri')
 	{
-		file_write('sh/uri.txt', $_POST['uri']);
-		remote('play-uri');
+		remote('play-uri', $_POST['uri']);
 	}
 	elseif($remote == 'focus')
 	{

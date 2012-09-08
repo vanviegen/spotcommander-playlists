@@ -5,8 +5,8 @@
 define('config_path', '/var/www/spotcommander');
 
 // How often to automatically refresh what's playing (in seconds)
-// Must be >= 30. Lower will disable it. Certain actions will refresh it immediately
-define('config_nowplaying_update_interval', 60);
+// Certain actions will refresh it immediately
+define('config_nowplaying_update_interval', 3);
 
 // Set to false to disable the Facebook like button
 // You can still share to Facebook manually
