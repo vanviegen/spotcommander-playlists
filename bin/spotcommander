@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Copyright 2012 Ole Jon Bjørkum
+# 
+# This file is part of SpotCommander.
+# 
+# SpotCommander is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# SpotCommander is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with SpotCommander.  If not, see <http://www.gnu.org/licenses/>.
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BIN=""$SCRIPT_DIR"/spotcommander"
+
+if [ -h "$BIN" ]; then
+
+	BIN_DIR="$(readlink "$BIN")"
+	BIN_DIR="$(dirname "$BIN_DIR")"
+
+else
+
+	BIN_DIR="$(dirname "$BIN")"
+
+fi
+
+CONFIG_FILE="$BIN_DIR/../config.php"
+
+if [ ! -e "$CONFIG_FILE" ]; then
+
+	echo -e "\nERROR: Cannot find config.php. This message should only appear if you have moved the daemon script out of the bin folder. If you have not done that, and followed the installation instructions, the script is not working correctly on your system. Contact mail@olejon.net.\n"
+	exit
+
+fi
+
+SPOTCOMMANDER_PATH="$(grep "config_path" "$CONFIG_FILE")"
+SPOTCOMMANDER_PATH="$(echo "$SPOTCOMMANDER_PATH" | sed "s/ *//g" | sed "s/define('config_path','//" | sed "s/');//")"
+
+export SPOTCOMMANDER_PATH
+
+if [ ! -e ""$SPOTCOMMANDER_PATH"/sh/spotify-ps.sh" ]; then
+
+	echo -e "\nERROR: It looks like you have not configured the correct path in config.php. Please read the installation instructions carefully.\n"	
+	exit
+
+fi
+
+if [ "$1" = "start" ]; then
+
+	CURRENT_USER="$(whoami)"
+
+	if [ "$CURRENT_USER" == "root" ]; then
+		echo -e "\nWARNING: It looks like you are running this daemon as root. Unless you are running Spotify as root, which is very unlikely, you should run this daemon as the desktop user running Spotify. Read the installation instructions.\n"
+		echo -e "Starting anyway. Run 'spotcommander stop' as root to stop the daemon."
+	fi
+
+	if [ ! -n "$DISPLAY" ]; then
+		echo -e "\nWARNING: You should run this daemon in your desktop session, and it looks like your are not doing that. Read the installation instructions.\n"
+		echo -e "Starting anyway. Run 'spotcommander stop' to stop the daemon."
+	fi
+
+	echo -e "\nStarting daemon...\n"
+
+	pkill -f ""$SPOTCOMMANDER_PATH"/sh/*" 1>/dev/null 2>&1
+	pkill -f "inotifywait -e modify "$SPOTCOMMANDER_PATH"/sh/*" 1>/dev/null 2>&1
+
+	sleep 2
+
+	"$SPOTCOMMANDER_PATH"/sh/spotcommander-remote.sh 1>/dev/null 2>&1 &
+
+elif [ "$1" = "stop" ]; then
+
+	echo -e "\nStopping daemon...\n"
+
+	pkill -f ""$SPOTCOMMANDER_PATH"/sh/*" 1>/dev/null 2>&1
+	pkill -f "inotifywait -e modify "$SPOTCOMMANDER_PATH"/sh/*" 1>/dev/null 2>&1
+
+else
+
+	echo -e "\nUsage: spotcommander start|stop\n"
+
+fi
